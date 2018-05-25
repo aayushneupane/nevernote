@@ -1,12 +1,9 @@
 package Test;
 
+import java.util.Arrays;
 import java.util.HashMap;
-
-import org.springframework.http.ResponseEntity;
-
-import neupane.me.controllers.MainController;
-import neupane.me.nevernote.Note;
-import neupane.me.nevernote.Notebook;
+import java.util.List;
+import java.util.Map.Entry;
 
 public class notebookTest {
 	
@@ -48,7 +45,35 @@ public class notebookTest {
 		HashMap<Integer, String[]> map = new HashMap<Integer, String[]>();
 		String[] tags1 = {"first", "second", "third"};
 		String[] tags2 = {"Sat", "sun", "mon"};
-		String[] tags3 = {"poem", "story", "note"};
+		String[] tags3 = {"poem", "story", "note", "mon"};
+		
+		map.put(1, tags1);
+		map.put(2, tags2);
+		map.put(3, tags3);
+		
+		String searchTag = "mon";
+		HashMap<Integer, String[]> filter = new HashMap<Integer, String[]>();
+		
+		for (Entry<Integer, String[]> entry : map.entrySet()) {
+			List<String> list = Arrays.asList(entry.getValue());
+			if (list.contains(searchTag)) {
+				filter.put(entry.getKey(), entry.getValue());
+			}
+		}
+		
+		for (Entry<Integer, String[]> entry : filter.entrySet()) {
+			for (int i = 0; i < entry.getValue().length; i++) {
+				System.out.println(entry.getValue()[i]);
+			} 
+			System.out.println("---");
+		}
+		
+		
+		
+//		HashMap<Integer, String[]> filtered = map.entrySet()
+//											.stream()
+//											.filter(p -> );
+		
 		
 		
 	}

@@ -1,6 +1,9 @@
 package neupane.me.controllers;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map.Entry;
 
 import javax.annotation.PostConstruct;
 
@@ -68,8 +71,18 @@ public class MainController {
 			if (tag == null)
 				return new ResponseEntity<Notebook> (notebookMap.get(id), HttpStatus.OK);
 			else {
-				Notebook filteredNotebook = new Notebook();
-				return new ResponseEntity<Notebook> (notebookMap.get(id), HttpStatus.OK);
+				HashMap<Long, Note> notes = notebookMap.get(id).getNotes();
+				HashMap<Long, Note> filter = new HashMap<Long, Note>();
+				
+				for (Entry<Long, Note> entry : notes.entrySet()) {
+					List<String> list = Arrays.asList(entry.getValue().getTags());
+					if (list.contains(tag)) {
+						filter.put(entry.getKey(), entry.getValue());
+					}
+				}
+				Notebook n = notebookMap.get(id);
+				n.setNotes(filter);
+				return new ResponseEntity<Notebook> (n, HttpStatus.OK);
 			}
 		}
 	}
