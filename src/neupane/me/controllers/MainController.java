@@ -1,6 +1,6 @@
 package neupane.me.controllers;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -22,12 +22,12 @@ import neupane.me.nevernote.Notebook;
 @RequestMapping("/rest")
 public class MainController {
 
-	private List<Notebook> notebookList;
+	private HashMap<Long, Notebook> notebookMap;
 
 	@PostConstruct
 	public void loadData() {
 
-		notebookList = new ArrayList<>();
+		notebookMap = new HashMap<>();
 
 	}
 
@@ -42,12 +42,13 @@ public class MainController {
 	}
 
 	@GetMapping("/notebook/{id}")
-	public ResponseEntity<Notebook> getNotebookById(@PathVariable int id){
-		System.out.println(notebookList.size());
-		if (id >= notebookList.size() || id < 0) {
-			throw new IdNotFoundException("Invalid ID: " + id);
+	public ResponseEntity<Notebook> getNotebookById(@PathVariable long id){
+		System.out.println(notebookMap.size());
+		System.out.println(notebookMap.get(id).toString());
+		if (id > notebookMap.size() || id <= 0) {
+			throw new IdNotFoundException("Invalid ID " + id);
 		}
-		return new ResponseEntity<Notebook> (notebookList.get(id), HttpStatus.OK);
+		return new ResponseEntity<Notebook> (notebookMap.get(id), HttpStatus.OK);
 	}
 	/**
 	 * 
@@ -57,7 +58,7 @@ public class MainController {
 	public ResponseEntity<Notebook> createNotebook() {
 		Notebook notebook = new Notebook();
 		System.out.println(notebook.toString());
-		notebookList.add(notebook);
+		notebookMap.put(notebook.getId(), notebook);
 		return new ResponseEntity<Notebook> (notebook, HttpStatus.CREATED);
 	}
 	
