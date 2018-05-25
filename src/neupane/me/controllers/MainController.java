@@ -71,6 +71,13 @@ public class MainController {
 			if (tag == null)
 				return new ResponseEntity<Notebook> (notebookMap.get(id), HttpStatus.OK);
 			else {
+				Notebook notebook = notebookMap.get(id);
+				Notebook filteredNotebook = new Notebook();
+				
+				filteredNotebook.setCreatedDate(notebook.getCreatedDate());
+				filteredNotebook.setModifiedDate(notebook.getModifiedDate());
+				filteredNotebook.setId(notebook.getId());
+				
 				HashMap<Long, Note> notes = notebookMap.get(id).getNotes();
 				HashMap<Long, Note> filter = new HashMap<Long, Note>();
 				
@@ -80,9 +87,8 @@ public class MainController {
 						filter.put(entry.getKey(), entry.getValue());
 					}
 				}
-				Notebook n = notebookMap.get(id);
-				n.setNotes(filter);
-				return new ResponseEntity<Notebook> (n, HttpStatus.OK);
+				filteredNotebook.setNotes(filter);
+				return new ResponseEntity<Notebook> (filteredNotebook, HttpStatus.OK);
 			}
 		}
 	}
