@@ -8,5 +8,9 @@
 </head>
 <body>
 Nevernote
+<hr>
+<a href="./rest/">REST</a> <br>
+<a href="./rest/nevernote">GET nevernote</a> <br>
+
 </body>
 </html>
