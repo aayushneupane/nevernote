@@ -1,5 +1,6 @@
 package neupane.me.nevernote;
 
+import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.springframework.http.HttpStatus;
@@ -10,17 +11,12 @@ public class Notebook {
 	private long id;
 	private long createdDate;
 	private long modifiedDate;
-	
+	private HashMap<Long, Note> notes;
+		
 	public Notebook() {
 		this.id = count.incrementAndGet();
 		this.createdDate = System.currentTimeMillis();
-	}
-	
-	public Notebook(long id, long createdDate, long modifiedDate) {
-		super();
-		this.id = count.incrementAndGet();
-		this.createdDate = createdDate;
-		this.modifiedDate = modifiedDate;
+		this.notes = new HashMap<Long, Note>();
 	}
 	
 	public long getId() {
@@ -41,17 +37,18 @@ public class Notebook {
 	public void setModifiedDate(long modifiedDate) {
 		this.modifiedDate = modifiedDate;
 	}
+	
+	public HashMap<Long, Note> getNotes() {
+		return notes;
+	}
+
+	public void setNotes(HashMap<Long, Note> notes) {
+		this.notes = notes;
+	}
 
 	@Override
 	public String toString() {
-		return "Notebook [id=" + id + ", createdDate=" + createdDate + ", modifiedDate=" + modifiedDate + "]";
+		return "Notebook [id=" + id + ", createdDate=" + createdDate + ", modifiedDate=" + modifiedDate + ", notes="
+				+ notes + "]";
 	}
-	
-	
-	
-
-	
-	
-	
-
 }
