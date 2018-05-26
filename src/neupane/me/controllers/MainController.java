@@ -192,12 +192,13 @@ public class MainController {
 	}
 
 	@PutMapping("/notebook/{id}/note/{noteId}")
-	public ResponseEntity<Notebook> modifyNote(@PathVariable long id,
+	public ResponseEntity<String> modifyNote(@PathVariable long id,
 			@PathVariable long noteId, @RequestBody Note note ) {
 
 		HashMap<Long, Note> noteMap; 
 		Notebook notebook;
 		Note oldNote;
+		long timeStamp = System.currentTimeMillis();
 		
 		if (!isValidNotebookId(id)) {
 			throw new IdNotFoundException("Invalid Notebook ID " + id);
@@ -214,13 +215,14 @@ public class MainController {
 
 		System.out.println(note);
 		note.setId(oldNote.getId());
-		note.setModifiedDate(System.currentTimeMillis());
+		note.setModifiedDate(timeStamp);
+		notebook.setModifiedDate(timeStamp);
 		System.out.println(note);
 		
 		System.out.println(notebook.toString());
 		noteMap.put(noteId, note);
 
-		return new ResponseEntity<Notebook> (notebook, HttpStatus.CREATED);
+		return new ResponseEntity<String> (HttpStatus.OK);
 	}
 
 	private boolean isValidNotebookId(long id) {
