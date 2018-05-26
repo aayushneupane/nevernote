@@ -17,6 +17,8 @@ Update and launch the project as any other Maven projects. The initial page shou
 
 # REST endpoints
 
+Base URL: /nevernote/rest/
+
 | URL Structure | Method | Status| Description | Comment
 |-|-|-|-|-|
 | /notebook | POST | 201 | Creates a new notebook instance
@@ -34,4 +36,3 @@ Update and launch the project as any other Maven projects. The initial page shou
 	"body" : "Note body",
 	"tags" : ["one", "two"]
 }
-[![N|Solid](https://cldup.com/dTxpPi9lDf.thumb.png)](https://nodesource.com/products/nsolid)
