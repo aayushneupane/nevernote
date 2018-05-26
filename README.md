@@ -7,6 +7,7 @@ Tech Used:
   - Maven 3.3.9
   - Eclipse Oxygen.3a
   - Tomcat 9
+  - Postman
   - Frameworks:
       - Spring 5.0.2
       - jUnit 4.12
