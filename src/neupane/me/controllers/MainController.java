@@ -24,6 +24,9 @@ import neupane.me.errorHandler.IdNotFoundException;
 import neupane.me.nevernote.Note;
 import neupane.me.nevernote.Notebook;
 
+/*
+ * /nevernote/rest/...
+ */
 @RestController
 @RequestMapping("/rest")
 public class MainController {
@@ -48,15 +51,28 @@ public class MainController {
 	//
 	//	}
 
+	/*
+	 * Sample to make sure service is working. Service isnt used anywhere else
+	 */
 	@GetMapping("/")
 	public String sayHello() {
 		return service.hello();
 	}
 
+	/**
+	 * GET /notebook should return error. Need ID
+	 * @return IdNotFoundException
+	 */
+
 	@GetMapping("/notebook")
 	public ResponseEntity<String> getNotebook(){
 		throw new IdNotFoundException("Notebook ID not passed");
 	}
+
+	/**
+	 * DELETE /notebook should return error. Need ID passed
+	 * @return IdNotFoundException
+	 */
 
 	@DeleteMapping("/notebook")
 	public ResponseEntity<String> deleteNotebookBad(){
@@ -67,20 +83,22 @@ public class MainController {
 	 * Search through the tags within a notebook
 	 * @param id - notebook ID
 	 * @param tag - tag being searched
-	 * @return
+	 * @return Notebook, 200
 	 */
 	@GetMapping("/notebook/{id}")
 	public ResponseEntity<Notebook> getNotebookById(@PathVariable long id, 
 			@RequestParam(value="tag", required=false) String tag){
-		System.out.println(notebookMap.size());
-		System.out.println(id);
-		System.out.println(tag);
+
 		if (!isValidNotebookId(id)) {
 			throw new IdNotFoundException("Invalid Notebook ID " + id);
 		} else {
+
+			//if tag doesnt exist, dont need to do any further computing. Return notebook
 			if (tag == null)
 				return new ResponseEntity<Notebook> (notebookMap.get(id), HttpStatus.OK);
 			else {
+
+				//create a new 'filtered' notebook and fill that with appropriate notes, notebook entities
 				Notebook notebook = notebookMap.get(id);
 				Notebook filteredNotebook = new Notebook();
 
@@ -88,8 +106,15 @@ public class MainController {
 				filteredNotebook.setModifiedDate(notebook.getModifiedDate());
 				filteredNotebook.setId(notebook.getId());
 
+				//create a new 'filtered' note and fill that with appropriate entities
 				HashMap<Long, Note> notes = notebookMap.get(id).getNotes();
 				HashMap<Long, Note> filter = new HashMap<Long, Note>();
+
+				//Notes are stored as HashMap for better retrieval time. 
+				//tags are stored as arrays. 
+				//need to loop through each notes hashmap, convert the tags to arraylist, and check if a tag exists in that arraylist
+				//if tag does exist, copy the content of that hashmap to the filtered hashmap. 
+				//update the filtered notebook with the filtered hashmap, and return filtered notebook. 
 
 				for (Entry<Long, Note> entry : notes.entrySet()) {
 					List<String> list = Arrays.asList(entry.getValue().getTags());
@@ -106,7 +131,7 @@ public class MainController {
 
 
 	/**
-	 * 
+	 * POST /notebook
 	 * @return the created notebook with status - 201 Created
 	 */
 	@PostMapping("/notebook")
@@ -117,6 +142,11 @@ public class MainController {
 		return new ResponseEntity<Notebook> (notebook, HttpStatus.CREATED);
 	}
 
+	/**
+	 * DELETE notebook/{id}
+	 * @param id - long notebook identifier 
+	 * @return 204 (no data)
+	 */ 
 	@DeleteMapping("/notebook/{id}")
 	public ResponseEntity<String> deleteNotebook(@PathVariable long id){
 		if (!isValidNotebookId(id)) {
@@ -131,6 +161,17 @@ public class MainController {
 		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	}
 
+	/**
+	 * POST notebook/{id}/note creates a new note with given requestbody json
+	 * sample json: {
+						“title”: “Note Title”,
+						“body” : “Note body”,
+						“tags” : [“one”, “two”]
+					}
+	 * @param id - long note identifier
+	 * @param note - json object
+	 * @return Notebook, 201
+	 */
 	@PostMapping("/notebook/{id}/note")
 	public ResponseEntity<Notebook> createNote(@PathVariable long id, @RequestBody Note note ) {
 
@@ -149,6 +190,13 @@ public class MainController {
 
 		return new ResponseEntity<Notebook> (notebook, HttpStatus.CREATED);
 	}
+	
+	/**
+	 * GET /notebook/{id}/note/{noteId}
+	 * @param id - notebook ID
+	 * @param noteId - note ID
+	 * @return Note, 200
+	 */
 
 	@GetMapping("/notebook/{id}/note/{noteId}")
 	public ResponseEntity<Note> getNote(@PathVariable long id, @PathVariable long noteId){
@@ -171,6 +219,13 @@ public class MainController {
 		return new ResponseEntity<Note>(note, HttpStatus.OK);
 	}
 
+	
+	/**
+	 * DELETE /notebook/{id}/note/{noteId} - Deletes the specific noteid from the given note
+	 * @param id - Notebook ID
+	 * @param noteId - Note ID
+	 * @return 204 - no data
+	 */
 	@DeleteMapping("/notebook/{id}/note/{noteId}")
 	public ResponseEntity<String> deleteNote(@PathVariable long id, @PathVariable long noteId){
 		Note deletedNote;
@@ -190,6 +245,14 @@ public class MainController {
 		}
 		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	}
+	
+	/**
+	 * PUT /notebook/{id}/note/{noteId} - updates the given noteId for given Id
+	 * @param id - notebook identifier
+	 * @param noteId - note idenfitier
+	 * @param note - json object 
+	 * @return - 204
+	 */
 
 	@PutMapping("/notebook/{id}/note/{noteId}")
 	public ResponseEntity<String> modifyNote(@PathVariable long id,
@@ -199,13 +262,13 @@ public class MainController {
 		Notebook notebook;
 		Note oldNote;
 		long timeStamp = System.currentTimeMillis();
-		
+
 		if (!isValidNotebookId(id)) {
 			throw new IdNotFoundException("Invalid Notebook ID " + id);
 		} else {
 			notebook = notebookMap.get(id);
 			noteMap = notebook.getNotes();
-			
+
 			if (!(isValidNoteId(noteMap, noteId))) {
 				throw new IdNotFoundException("Invalid Note ID " + id);
 			} else {
@@ -218,25 +281,50 @@ public class MainController {
 		note.setModifiedDate(timeStamp);
 		notebook.setModifiedDate(timeStamp);
 		System.out.println(note);
-		
+
 		System.out.println(notebook.toString());
 		noteMap.put(noteId, note);
 
 		return new ResponseEntity<String> (HttpStatus.OK);
 	}
 
+	/**
+	 * Check if a notebook ID is valid or not. 
+	 * not valid if:
+	 * ID is bigger than the size of notebookMap. Notebook map uses hashmap so every new entry is auto updated to +1
+	 * ID is negative. 
+	 * Notebook in given ID is null
+	 * @param id - notebook identifier
+	 * @return boolean
+	 */
 	private boolean isValidNotebookId(long id) {
 		if (id > notebookMap.size() || id <= 0 || notebookMap.get(id) == null) {
 			return false;
 		} else 
 			return true;
 	}
+	
+	/**
+	 * Check if a note ID is valid or not. 
+	 * not valid if:
+	 * ID isof  bigger than the size noteMap. Note uses hashmap so every new entry is auto updated to +1
+	 * ID is negative. 
+	 * Note in given ID is null
+	 * @param id - notebook identifier
+	 * @param noteMap - HashMap that contains <Long, Note> object
+	 * @return boolean
+	 */
 	private boolean isValidNoteId(HashMap<Long, Note> noteMap, long id) {
 		if (id > noteMap.size() || id <= 0 || noteMap.get(id) == null || noteMap == null) {
 			return false;
 		} else 
 			return true;
 	}
+	
+	/*
+	 * Exception Handlers
+	 */
+	
 	@ExceptionHandler
 	public ResponseEntity<ErrorResponse> handleException(IdNotFoundException exc) {
 
@@ -298,8 +386,4 @@ public class MainController {
 		// return ResponseEntity		
 		return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
 	}
-
-
-
-
 }
