@@ -1,4 +1,4 @@
-package Test;
+package neupane.me.test;
 
 import java.util.Arrays;
 import java.util.HashMap;

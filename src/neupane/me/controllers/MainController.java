@@ -5,8 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
-import javax.annotation.PostConstruct;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -15,6 +13,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -29,25 +28,36 @@ import neupane.me.nevernote.Notebook;
 @RequestMapping("/rest")
 public class MainController {
 
+	private MainControllerService service;
 	private HashMap<Long, Notebook> notebookMap;
 
-	@PostConstruct
-	public void loadData() {
-
-		notebookMap = new HashMap<>();
-
+	public MainController(MainControllerService service) {
+		this.notebookMap = new HashMap<>();
+		this.service = service;
 	}
+
+	//	public MainController() {
+	//		this.notebookMap = new HashMap<>();
+	//	}
+
+
+	//	@PostConstruct
+	//	public void loadData() {
+	//
+	//		notebookMap = new HashMap<>();
+	//
+	//	}
 
 	@GetMapping("/")
 	public String sayHello() {
-		return "Hello World!";
+		return service.hello();
 	}
 
 	@GetMapping("/notebook")
 	public ResponseEntity<String> getNotebook(){
 		throw new IdNotFoundException("Notebook ID not passed");
 	}
-	
+
 	@DeleteMapping("/notebook")
 	public ResponseEntity<String> deleteNotebookBad(){
 		throw new IdNotFoundException("Notebook ID not passed");
@@ -73,14 +83,14 @@ public class MainController {
 			else {
 				Notebook notebook = notebookMap.get(id);
 				Notebook filteredNotebook = new Notebook();
-				
+
 				filteredNotebook.setCreatedDate(notebook.getCreatedDate());
 				filteredNotebook.setModifiedDate(notebook.getModifiedDate());
 				filteredNotebook.setId(notebook.getId());
-				
+
 				HashMap<Long, Note> notes = notebookMap.get(id).getNotes();
 				HashMap<Long, Note> filter = new HashMap<Long, Note>();
-				
+
 				for (Entry<Long, Note> entry : notes.entrySet()) {
 					List<String> list = Arrays.asList(entry.getValue().getTags());
 					if (list.contains(tag)) {
@@ -92,7 +102,7 @@ public class MainController {
 			}
 		}
 	}
-	
+
 
 
 	/**
@@ -106,7 +116,7 @@ public class MainController {
 		notebookMap.put(notebook.getId(), notebook);
 		return new ResponseEntity<Notebook> (notebook, HttpStatus.CREATED);
 	}
-	
+
 	@DeleteMapping("/notebook/{id}")
 	public ResponseEntity<String> deleteNotebook(@PathVariable long id){
 		if (!isValidNotebookId(id)) {
@@ -120,36 +130,36 @@ public class MainController {
 		System.out.println(notebook);
 		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	}
-	
+
 	@PostMapping("/notebook/{id}/note")
 	public ResponseEntity<Notebook> createNote(@PathVariable long id, @RequestBody Note note ) {
-		
+
 		if (!isValidNotebookId(id)) {
 			throw new IdNotFoundException("Invalid Notebook ID " + id);
 		} 
-		
+
 		System.out.println(note);
-		
+
 		Notebook notebook = notebookMap.get(id);
 		System.out.println(notebook.toString());
 		HashMap<Long, Note> noteMap = notebook.getNotes();
 		long noteId = note.getId();
 		noteMap.put(noteId, note);
 		notebook.setNotes(noteMap);
-		
+
 		return new ResponseEntity<Notebook> (notebook, HttpStatus.CREATED);
 	}
-	
+
 	@GetMapping("/notebook/{id}/note/{noteId}")
 	public ResponseEntity<Note> getNote(@PathVariable long id, @PathVariable long noteId){
 		Note note;
 		HashMap<Long, Note> noteMap; 
-		
+
 		if (!isValidNotebookId(id)) {
 			throw new IdNotFoundException("Invalid Notebook ID " + id);
 		} else {
 			Notebook notebook = notebookMap.get(id);
-			
+
 			noteMap = notebook.getNotes();
 			if (!isValidNoteId(noteMap, noteId)){
 				throw new IdNotFoundException("Invalid Note ID " + noteId);
@@ -157,10 +167,10 @@ public class MainController {
 				note = noteMap.get(noteId);
 			}
 		}
-		
+
 		return new ResponseEntity<Note>(note, HttpStatus.OK);
 	}
-	
+
 	@DeleteMapping("/notebook/{id}/note/{noteId}")
 	public ResponseEntity<String> deleteNote(@PathVariable long id, @PathVariable long noteId){
 		Note deletedNote;
@@ -170,7 +180,7 @@ public class MainController {
 			throw new IdNotFoundException("Invalid Notebook ID " + id);
 		} else {
 			Notebook notebook = notebookMap.get(id);
-			
+
 			noteMap = notebook.getNotes();
 			if (!isValidNoteId(noteMap, noteId)){
 				throw new IdNotFoundException("Invalid Note ID " + noteId);
@@ -180,7 +190,39 @@ public class MainController {
 		}
 		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	}
-	
+
+	@PutMapping("/notebook/{id}/note/{noteId}")
+	public ResponseEntity<Notebook> modifyNote(@PathVariable long id,
+			@PathVariable long noteId, @RequestBody Note note ) {
+
+		HashMap<Long, Note> noteMap; 
+		Notebook notebook;
+		Note oldNote;
+		
+		if (!isValidNotebookId(id)) {
+			throw new IdNotFoundException("Invalid Notebook ID " + id);
+		} else {
+			notebook = notebookMap.get(id);
+			noteMap = notebook.getNotes();
+			
+			if (!(isValidNoteId(noteMap, noteId))) {
+				throw new IdNotFoundException("Invalid Note ID " + id);
+			} else {
+				oldNote = noteMap.get(noteId);
+			}
+		}
+
+		System.out.println(note);
+		note.setId(oldNote.getId());
+		note.setModifiedDate(System.currentTimeMillis());
+		System.out.println(note);
+		
+		System.out.println(notebook.toString());
+		noteMap.put(noteId, note);
+
+		return new ResponseEntity<Notebook> (notebook, HttpStatus.CREATED);
+	}
+
 	private boolean isValidNotebookId(long id) {
 		if (id > notebookMap.size() || id <= 0 || notebookMap.get(id) == null) {
 			return false;
@@ -195,13 +237,13 @@ public class MainController {
 	}
 	@ExceptionHandler
 	public ResponseEntity<ErrorResponse> handleException(IdNotFoundException exc) {
-		
+
 		System.out.println(exc.getMessage());
 
 		// create a ErrorResponse
 
 		ErrorResponse error = new ErrorResponse();
-		
+
 		error.setStatus(HttpStatus.NOT_FOUND.value());
 		error.setMessage(exc.getMessage());
 		error.setTimeStamp(System.currentTimeMillis());
@@ -212,7 +254,7 @@ public class MainController {
 	} 
 
 	// add another exception handler ... to catch any exception (catch all)
-	
+
 	@ExceptionHandler
 	public ResponseEntity<ErrorResponse> handleException(Exception exc) {
 
@@ -226,31 +268,31 @@ public class MainController {
 		// return ResponseEntity		
 		return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
 	}
-	
+
 	@ExceptionHandler
 	public ResponseEntity<ErrorResponse> handleException(NullPointerException exc) {
-		
+
 		// create a ErrorResponse
 		ErrorResponse error = new ErrorResponse();
-		
+
 		error.setStatus(HttpStatus.BAD_REQUEST.value());
 		error.setMessage(exc.getMessage());
 		error.setTimeStamp(System.currentTimeMillis());
-		
+
 		// return ResponseEntity		
 		return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
 	}
-	
+
 	@ExceptionHandler
 	public ResponseEntity<ErrorResponse> handleException(HttpRequestMethodNotSupportedException exc) {
-		
+
 		// create a ErrorResponse
 		ErrorResponse error = new ErrorResponse();
-		
+
 		error.setStatus(HttpStatus.BAD_REQUEST.value());
 		error.setMessage(exc.getMessage());
 		error.setTimeStamp(System.currentTimeMillis());
-		
+
 		// return ResponseEntity		
 		return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
 	}
