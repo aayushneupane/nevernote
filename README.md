@@ -1,4 +1,4 @@
-# Nevernotes
+# Nevernote
 
 Nevernote is a REST API that supports creating notebook and notes. Notebooks are essentially collection of notes.
 
